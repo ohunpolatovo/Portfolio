@@ -16,8 +16,18 @@ export default function AdminPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    setPortfolio(readPortfolio());
-    setReady(true);
+    async function loadPortfolio() {
+      const localPortfolio = readPortfolio();
+      try {
+        const response = await fetch("/api/projects");
+        const projects = response.ok ? await response.json() : localPortfolio.projects;
+        setPortfolio({ ...localPortfolio, projects: projects.length ? projects : localPortfolio.projects });
+      } catch {
+        setPortfolio(localPortfolio);
+      }
+      setReady(true);
+    }
+    loadPortfolio();
   }, [router]);
 
   function updateProfile(event) {
@@ -39,24 +49,35 @@ export default function AdminPage() {
     reader.readAsDataURL(file);
   }
 
-  function saveProject(event) {
+  async function saveProject(event) {
     event.preventDefault();
     if (!project.title.trim()) return;
-    const projects = editingId
-      ? portfolio.projects.map((item) => item.id === editingId ? { ...project, id: editingId } : item)
-      : [...portfolio.projects, { ...project, id: Date.now() }];
-    const next = { ...portfolio, projects };
-    setPortfolio(next);
-    savePortfolio(next);
+    const endpoint = editingId ? `/api/projects/${editingId}` : "/api/projects";
+    const response = await fetch(endpoint, {
+      method: editingId ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+    });
+    if (!response.ok) {
+      setNotice("Loyiha saqlanmadi");
+      return;
+    }
+    const savedProject = await response.json();
+    const projects = editingId ? portfolio.projects.map((item) => item.id === editingId ? savedProject : item) : [...portfolio.projects, savedProject];
+    setPortfolio((current) => ({ ...current, projects }));
     setProject(blankProject);
     setEditingId(null);
     setNotice(editingId ? "Loyiha yangilandi" : "Yangi loyiha qo'shildi");
   }
 
-  function deleteProject(id) {
-    const next = { ...portfolio, projects: portfolio.projects.filter((item) => item.id !== id) };
-    setPortfolio(next);
-    savePortfolio(next);
+  async function deleteProject(id) {
+    const response = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      setNotice("Loyiha o'chirilmadi");
+      return;
+    }
+    const projects = portfolio.projects.filter((item) => item.id !== id);
+    setPortfolio((current) => ({ ...current, projects }));
     setNotice("Loyiha o'chirildi");
   }
 
@@ -66,9 +87,8 @@ export default function AdminPage() {
     window.scrollTo({ top: 450, behavior: "smooth" });
   }
 
-  function logout() {
-    window.localStorage.removeItem("olloberdi-admin-auth");
-    document.cookie = "olloberdi-admin-auth=; path=/; max-age=0; samesite=lax";
+  async function logout() {
+    await fetch("/api/logout", { method: "POST" });
     router.push("/login");
   }
 

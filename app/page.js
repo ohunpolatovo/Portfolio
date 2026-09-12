@@ -7,7 +7,19 @@ import { defaultPortfolio, readPortfolio } from "../lib/data";
 export default function HomePage() {
   const [portfolio, setPortfolio] = useState(defaultPortfolio);
 
-  useEffect(() => setPortfolio(readPortfolio()), []);
+  useEffect(() => {
+    async function loadPortfolio() {
+      const localPortfolio = readPortfolio();
+      try {
+        const response = await fetch("/api/projects");
+        const projects = response.ok ? await response.json() : localPortfolio.projects;
+        setPortfolio({ ...localPortfolio, projects: projects.length ? projects : localPortfolio.projects });
+      } catch {
+        setPortfolio(localPortfolio);
+      }
+    }
+    loadPortfolio();
+  }, []);
 
   return (
     <main className="portfolio-page">
