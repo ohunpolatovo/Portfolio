@@ -1,0 +1,19 @@
+{
+  "name": "olloberdi-portfolio",
+  "version": "1.0.0",
+  "description": "Junior frontend developer portfolio with local admin panel",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ohunpolatov Olloberdi — Frontend Developer</title>
+<meta name="description" content="Ohunpolatov Olloberdi — Frontend Developer. Kelajak texnologiyalariga yo'naltirilgan raqamli avlod vakili.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23030712'/%3E%3Ctext x='50' y='68' font-size='55' fill='%2300f2fe' text-anchor='middle' font-family='monospace'%3E%3C/%3E%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="output.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+  :root{
+    --bg:#030712;
+    --surface:#0a0e1a;
+    --surface-2:#0d1424;
+    --cyan:#00f2fe;
+    --blue:#4facfe;
+    --purple:#bd00ff;
+    --line: rgba(79,172,254,0.18);
+  }
+
+  *{ scrollbar-width: thin; scrollbar-color: var(--blue) var(--surface); }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background: var(--bg); }
+  ::-webkit-scrollbar-thumb{ background: linear-gradient(var(--cyan), var(--purple)); border-radius:4px; }
+
+  html{ scroll-behavior:smooth; }
+  body{
+    background: var(--bg);
+    font-family:'Space Grotesk', sans-serif;
+    cursor: default;
+  }
+  .font-display{ font-family:'Orbitron', sans-serif; }
+  .font-term{ font-family:'JetBrains Mono', monospace; }
+
+  ::selection{ background: var(--purple); color:#fff; }
+
+  /* ---------- Boot loader ---------- */
+  #boot-screen{
+    position:fixed; inset:0; z-index:100; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; color: var(--cyan);
+    transition: opacity .6s ease, visibility .6s ease;
+  }
+  #boot-screen.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  #boot-log{ font-size:12px; line-height:1.7; width:min(90vw,460px); min-height:170px; }
+  #boot-bar-track{ width:min(90vw,460px); height:2px; background:rgba(255,255,255,.08); margin-top:14px; overflow:hidden; }
+  #boot-bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--cyan),var(--purple)); box-shadow:0 0 12px var(--cyan); }
+
+  /* ---------- Ambient / HUD ---------- */
+  #bg-canvas{ position:fixed; inset:0; z-index:0; width:100%; height:100%; }
+  .scanlines{
+    position:fixed; inset:0; z-index:1; pointer-events:none; mix-blend-mode:overlay; opacity:.35;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px);
+  }
+  .vignette{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    background: radial-gradient(ellipse at 50% 40%, transparent 40%, #030712 100%);
+  }
+
+  /* ---------- Custom cursor ---------- */
+  #cursor-dot, #cursor-ring{ position:fixed; top:0; left:0; z-index:90; pointer-events:none; border-radius:50%; transform:translate(-50%,-50%); will-change:transform; }
+  #cursor-dot{ width:6px; height:6px; background:var(--cyan); box-shadow:0 0 8px var(--cyan); }
+  #cursor-ring{ width:34px; height:34px; border:1px solid rgba(0,242,254,.5); transition: width .2s, height .2s, border-color .2s, background .2s; }
+  #cursor-ring.active{ width:54px; height:54px; background:rgba(189,0,255,.08); border-color: var(--purple); }
+
+  /* ---------- Section reveal ---------- */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.3,1), transform .8s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* ---------- Glitch text ---------- */
+  .glitch-text{ position:relative; display:inline-block; }
+  .glitch-text::before, .glitch-text::after{
+    content:attr(data-text); position:absolute; top:0; left:0; width:100%; height:100%; background:transparent; opacity:0;
+  }
+  .glitch-text::before{ color:#ff00c8; left:2px; }
+  .glitch-text::after{ color:#00f2fe; left:-2px; }
+  .glitch-text:hover::before{ opacity:.8; animation:glitch1 .35s infinite linear alternate-reverse; }
+  .glitch-text:hover::after{ opacity:.8; animation:glitch2 .35s infinite linear alternate-reverse; }
+  @keyframes glitch1{
+    0%{ clip-path:inset(15% 0 65% 0); transform:translate(-2px,-1px);}
+    25%{ clip-path:inset(55% 0 10% 0); transform:translate(2px,1px);}
+    50%{ clip-path:inset(5% 0 80% 0); transform:translate(-1px,2px);}
+    75%{ clip-path:inset(70% 0 8% 0); transform:translate(2px,-2px);}
+    100%{ clip-path:inset(30% 0 40% 0); transform:translate(-2px,1px);}
+  }
+  @keyframes glitch2{
+    0%{ clip-path:inset(60% 0 10% 0); transform:translate(2px,1px);}
+    25%{ clip-path:inset(10% 0 70% 0); transform:translate(-2px,-1px);}
+    50%{ clip-path:inset(75% 0 5% 0); transform:translate(1px,-2px);}
+    75%{ clip-path:inset(20% 0 60% 0); transform:translate(-2px,2px);}
+    100%{ clip-path:inset(45% 0 35% 0); transform:translate(2px,-1px);}
+  }
+
+  /* ---------- Misc animations ---------- */
+  @keyframes blink-caret{ 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+  .caret{ animation: blink-caret 1s step-end infinite; }
+
+  @keyframes float-y{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-10px);} }
+  .float{ animation: float-y 5s ease-in-out infinite; }
+
+  @keyframes spin-slow{ to{ transform: rotate(360deg);} }
+  .spin-slow{ animation: spin-slow 14s linear infinite; }
+
+  @keyframes gradient-x{ 0%,100%{ background-position:0% 50%;} 50%{ background-position:100% 50%;} }
+  .gradient-text{
+    background:linear-gradient(90deg, var(--cyan), var(--blue), var(--purple), var(--cyan));
+    background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: gradient-x 6s ease infinite;
+  }
+
+  @keyframes pulse-dot{ 0%,100%{ opacity:.4; transform:scale(1);} 50%{ opacity:1; transform:scale(1.4);} }
+  .pulse-dot{ animation: pulse-dot 2.2s ease-in-out infinite; }
+
+  /* ---------- Cards ---------- */
+  .tilt-card{ transform-style:preserve-3d; transition: transform .12s ease-out, box-shadow .3s ease, border-color .3s ease; will-change:transform; }
+  .glass-panel{
+    background: linear-gradient(155deg, rgba(255,255,255,.045), rgba(255,255,255,.01));
+    border:1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(6px);
+  }
+  .neon-border-hover:hover{ border-color: var(--cyan); box-shadow:0 0 0 1px rgba(0,242,254,.25), 0 20px 60px -20px rgba(0,242,254,.35); }
+
+  /* ---------- Matrix easter egg ---------- */
+  #matrix-overlay{ position:fixed; inset:0; z-index:200; background:#000; opacity:0; pointer-events:none; transition:opacity .4s ease; }
+  #matrix-overlay.show{ opacity:1; pointer-events:auto; }
+  #matrix-hint{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:201;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:#00f2fe; opacity:0; transition:opacity .4s;
+  }
+  #matrix-overlay.show #matrix-hint{ opacity:.8; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  @media (hover:none){
+    #cursor-dot, #cursor-ring{ display:none; }
+  }
+</style>
+</head>
+<body class="bg-[#030712] text-slate-300 antialiased overflow-x-hidden selection:bg-fuchsia-500">
+
+  <!-- ============ BOOT LOADER ============ -->
+  <div id="boot-screen" aria-hidden="true">
+    <div id="boot-log"></div>
+    <div id="boot-bar-track"><div id="boot-bar"></div></div>
+  </div>
+
+  <!-- ============ SVG FILTERS (liquid distortion) ============ -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <filter id="liquid-filter">
+        <feTurbulence id="liquid-turb" type="fractalNoise" baseFrequency="0 0" numOctaves="2" result="turbulence" seed="7"/>
+        <feDisplacementMap id="liquid-disp" in="SourceGraphic" in2="turbulence" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- ============ AMBIENT BACKGROUND ============ -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <!-- ============ CUSTOM CURSOR ============ -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ============ MATRIX EASTER EGG OVERLAY ============ -->
+  <canvas id="matrix-overlay"></canvas>
+  <div id="matrix-hint">MAXFIY&nbsp;REJIM&nbsp;FAOLLASHTIRILDI&nbsp;// yopish uchun 'M' yoki ESC bosing</div>
+
+  <!-- ============ NAVBAR ============ -->
+  <header id="navbar" class="fixed top-0 inset-x-0 z-40 transition-all duration-300">
+    <nav class="max-w-7xl mx-auto flex items-center justify-between px-5 sm:px-8 py-4">
+      <a href="#hero" class="font-display font-bold text-lg tracking-widest text-white flex items-center gap-2 group">
+        <span class="w-8 h-8 rounded-lg border border-cyan-400/40 flex items-center justify-center text-[#00f2fe] group-hover:shadow-[0_0_16px_#00f2fe] transition-shadow">O</span>
+        <span class="hidden sm:inline">OHUNPOLATOV<span class="text-[#00f2fe]">.</span>DEV</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-1 font-term text-xs uppercase tracking-widest">
+        <a href="#about" class="nav-link px-4 py-2 rounded-full text-slate-300 hover:text-white transition-colors">// Men haqimda</a>
+        <a href="#skills" class="nav-link px-4 py-2 rounded-full text-slate-300 hover:text-white transition-colors">// Arsenal</a>
+        <a href="#projects" class="nav-link px-4 py-2 rounded-full text-slate-300 hover:text-white transition-colors">// Loyihalar</a>
+        <a href="#contact" class="nav-link ml-2 px-4 py-2 rounded-full border border-[#00f2fe]/40 text-[#00f2fe] hover:bg-[#00f2fe]/10 hover:shadow-[0_0_18px_rgba(0,242,254,.35)] transition-all">connect()</a>
+      </div>
+
+      <button id="menu-btn" aria-label="Menyu" class="md:hidden w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+    </nav>
+
+    <!-- mobile menu -->
+    <div id="mobile-menu" class="md:hidden hidden flex-col font-term text-sm uppercase tracking-widest bg-[#030712]/95 backdrop-blur border-t border-white/5 px-6 py-4 gap-1">
+      <a href="#about" class="mobile-link py-3 border-b border-white/5 text-slate-300">// Men haqimda</a>
+      <a href="#skills" class="mobile-link py-3 border-b border-white/5 text-slate-300">// Arsenal</a>
+      <a href="#projects" class="mobile-link py-3 border-b border-white/5 text-slate-300">// Loyihalar</a>
+      <a href="#contact" class="mobile-link py-3 text-[#00f2fe]">connect()</a>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+
+    <!-- ============ HERO ============ -->
+    <section id="hero" class="relative min-h-svh flex flex-col items-center justify-center px-5 sm:px-8 text-center overflow-hidden">
+
+      <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/3 font-term text-[11px] sm:text-xs tracking-widest text-[#4facfe] reveal">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f2fe] opacity-60"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#00f2fe]"></span>
+        </span>
+        SYSTEM STATUS: ONLINE — EST. 2006
+      </div>
+
+      <h1 class="font-display font-black leading-[0.95] text-white select-none reveal" style="font-size:clamp(2.4rem,9vw,7rem)">
+        <span id="hero-name" data-text="OHUNPOLATOV" class="glitch-text block" style="filter:url(#liquid-filter)">OHUNPOLATOV</span>
+        <span class="gradient-text block" style="font-size:clamp(1.8rem,6.5vw,5rem)">OLLOBERDI</span>
+      </h1>
+
+      <p class="mt-6 font-term text-sm sm:text-base md:text-lg text-slate-300 max-w-xl reveal">
+        <span class="text-[#00f2fe]">&gt;</span> <span id="typewriter"></span><span class="caret text-[#00f2fe]">▍</span>
+      </p>
+
+      <p class="mt-2 text-slate-500 text-xs sm:text-sm font-term reveal">Frontend Developer · Kelajakni interfeys orqali quraman</p>
+
+      <div class="mt-10 flex flex-wrap items-center justify-center gap-4 reveal">
+        <a href="#projects" class="px-7 py-3 rounded-full bg-linear-to-r from-[#00f2fe] to-[#4facfe] text-[#030712] font-semibold text-sm tracking-wide hover:shadow-[0_0_30px_rgba(0,242,254,.5)] hover:-translate-y-0.5 transition-all">
+          Loyihalarni ko'rish
+        </a>
+        <a href="#contact" class="px-7 py-3 rounded-full border border-[#bd00ff]/50 text-[#bd00ff] font-semibold text-sm tracking-wide hover:bg-[#bd00ff]/10 hover:shadow-[0_0_30px_rgba(189,0,255,.35)] hover:-translate-y-0.5 transition-all">
+          Terminal orqali bog'lanish
+        </a>
+      </div>
+
+      <a href="#about" aria-label="Pastga aylantirish" class="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-500 hover:text-[#00f2fe] transition-colors float">
+        <i data-lucide="chevron-down" class="w-6 h-6"></i>
+      </a>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section id="about" class="relative py-28 sm:py-36 px-5 sm:px-8">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-[0.9fr_1.1fr] gap-14 items-start">
+
+        <div class="reveal">
+          <span class="font-term text-xs tracking-[0.3em] text-[#00f2fe]">01 // PROFIL.EXE</span>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white mt-3 leading-tight">
+            Raqamli avlod<br>vakili
+          </h2>
+
+          <div class="mt-8 glass-panel rounded-2xl p-5 font-term text-xs sm:text-sm space-y-2 text-slate-400">
+            <p><span class="text-[#4facfe]">const</span> <span class="text-white">dev</span> = {</p>
+            <p class="pl-4">ism: <span class="text-[#00f2fe]">"Ohunpolatov Olloberdi"</span>,</p>
+            <p class="pl-4">tugilgan: <span class="text-[#00f2fe]">2006</span>,</p>
+            <p class="pl-4">yosh: <span id="dyn-age" class="text-[#00f2fe]">20</span>,</p>
+            <p class="pl-4">kasb: <span class="text-[#00f2fe]">"Frontend Developer"</span>,</p>
+            <p class="pl-4">hayot_tarzi: <span class="text-[#00f2fe]">"kod yozish"</span></p>
+            <p>};</p>
+          </div>
+        </div>
+
+        <div class="reveal space-y-6 text-slate-400 leading-relaxed text-[15px] sm:text-base">
+          <p>
+            2006-yilda, texnologiya allaqachon hayotning ajralmas qismiga aylangan bir davrda dunyoga keldim.
+            Men uchun internet — imkoniyat emas, muhit; kod esa — chet til emas, ona tilim.
+            Shu sababli o'zimni <span class="text-[#00f2fe]">raqamli avlod vakili</span> deb ataymuni yoqtiraman —
+            fikrlashim ham, ishlash uslubim ham tezlik, tajriba va estetikaga qurilgan.
+          </p>
+          <p>
+            Men uchun kod yozish — bu shunchaki kasb emas, <span class="text-[#bd00ff]">hayot tarzi</span>.
+            Har bir <code class="font-term text-[#4facfe]">&lt;div&gt;</code> — bu bo'sh joy emas, imkoniyat;
+            har bir animatsiya — foydalanuvchi bilan bo'ladigan kichik suhbat. Interfeys qurar ekanman,
+            men nafaqat funksional, balki his qildiradigan tajriba yaratishga intilaman.
+          </p>
+          <p>
+            Kelajak allaqachon boshlangan, va men uni <span class="text-white font-medium">brauzer oynasi ichida</span> quraman —
+            piksel-piksel, komponent-komponent, animatsiya-animatsiya.
+          </p>
+
+          <div class="grid grid-cols-3 gap-3 pt-4">
+            <div class="glass-panel rounded-xl px-3 py-4 text-center">
+              <div class="font-display text-xl sm:text-2xl text-[#00f2fe]" data-counter="2006">0</div>
+              <div class="font-term text-[10px] sm:text-[11px] text-slate-500 mt-1 tracking-widest">TUG'ILGAN YIL</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-4 text-center">
+              <div class="font-display text-xl sm:text-2xl text-[#4facfe]" data-counter="100">0</div>
+              <div class="font-term text-[10px] sm:text-[11px] text-slate-500 mt-1 tracking-widest">% FIDOYILIK</div>
+            </div>
+            <div class="glass-panel rounded-xl px-3 py-4 text-center">
+              <div class="font-display text-xl sm:text-2xl text-[#bd00ff]" data-counter="24">0</div>
+              <div class="font-term text-[10px] sm:text-[11px] text-slate-500 mt-1 tracking-widest">SOAT/KOD REJIMI</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SKILLS — BENTO GRID ============ -->
+    <section id="skills" class="relative py-28 sm:py-36 px-5 sm:px-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14 reveal">
+          <span class="font-term text-xs tracking-[0.3em] text-[#00f2fe]">02 // TECH_ARSENAL</span>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white mt-3">Texnologik quroli-yarog'im</h2>
+          <p class="text-slate-500 mt-3 max-w-md mx-auto text-sm sm:text-base">Kartani suring — har biri o'z chuqurligida javob beradi.</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 auto-rows-\[150px\] gap-4 reveal">
+
+          <div class="tilt-card glass-panel neon-border-hover col-span-2 row-span-2 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-[#00f2fe]/10 blur-2xl group-hover:bg-[#00f2fe]/20 transition-colors"></div>
+            <i data-lucide="braces" class="w-9 h-9 text-[#00f2fe]"></i>
+            <div>
+              <h3 class="font-display font-bold text-xl sm:text-2xl text-white">JavaScript</h3>
+              <p class="text-xs sm:text-sm text-slate-500 mt-1">Interfeyslarga jon beruvchi asosiy til.</p>
+            </div>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover row-span-2 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group">
+            <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-[#4facfe]/10 blur-2xl group-hover:bg-[#4facfe]/20 transition-colors"></div>
+            <i data-lucide="atom" class="w-8 h-8 text-[#4facfe] spin-slow" style="animation-play-state:paused" onmouseenter="this.style.animationPlayState='running'" onmouseleave="this.style.animationPlayState='paused'"></i>
+            <div>
+              <h3 class="font-display font-bold text-lg text-white">React</h3>
+              <p class="text-xs text-slate-500 mt-1">Komponentlar orqali fikrlash.</p>
+            </div>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden group">
+            <i data-lucide="file-code-2" class="w-7 h-7 text-[#bd00ff]"></i>
+            <h3 class="font-display font-semibold text-white text-sm sm:text-base">HTML5</h3>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden group">
+            <i data-lucide="paintbrush" class="w-7 h-7 text-[#00f2fe]"></i>
+            <h3 class="font-display font-semibold text-white text-sm sm:text-base">CSS3</h3>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover col-span-2 rounded-2xl p-5 flex items-center justify-between relative overflow-hidden group">
+            <div>
+              <h3 class="font-display font-semibold text-white text-sm sm:text-base">Next.js</h3>
+              <p class="text-xs text-slate-500 mt-1">Server va tezlik uyg'unligi.</p>
+            </div>
+            <i data-lucide="triangle" class="w-7 h-7 text-white"></i>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden group">
+            <i data-lucide="wind" class="w-7 h-7 text-[#4facfe]"></i>
+            <h3 class="font-display font-semibold text-white text-sm sm:text-base">Tailwind</h3>
+          </div>
+
+          <div class="tilt-card glass-panel neon-border-hover rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden group">
+            <i data-lucide="git-branch" class="w-7 h-7 text-[#bd00ff]"></i>
+            <h3 class="font-display font-semibold text-white text-sm sm:text-base">Git</h3>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROJECTS ============ -->
+    <section id="projects" class="relative py-28 sm:py-36 px-5 sm:px-8">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14 reveal">
+          <span class="font-term text-xs tracking-[0.3em] text-[#00f2fe]">03 // MEGA_PROJECTS</span>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white mt-3">Tanlangan loyihalar</h2>
+          <p class="text-slate-500 mt-3 max-w-lg mx-auto text-sm sm:text-base">
+            Quyidagi kartalar — namuna maketlar. O'z skrinshotlaringiz va havolalaringizni <code class="font-term text-[#4facfe]">.project-shot</code> va <code class="font-term text-[#4facfe]">href</code> ichiga almashtiring.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-6 reveal">
+
+          <a href="#" class="project-card group relative rounded-2xl overflow-hidden glass-panel neon-border-hover" style="perspective:1000px">
+            <div class="tilt-card-project h-56 sm:h-64 relative overflow-hidden project-shot" style="background:linear-gradient(135deg,#0a0e1a,#0d1b2f 40%,#00f2fe22);">
+              <div class="absolute inset-0 opacity-40" style="background-image:linear-gradient(rgba(0,242,254,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(0,242,254,.25) 1px,transparent 1px);background-size:26px 26px;"></div>
+              <i data-lucide="layout-dashboard" class="absolute bottom-4 right-4 w-10 h-10 text-[#00f2fe]/70"></i>
+              <div class="absolute inset-0 flex items-end p-5 bg-linear-to-t from-[#030712] via-transparent to-transparent">
+                <span class="font-term text-[10px] tracking-widest text-[#00f2fe]/80">// PROJECT_01</span>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">NEBULA <span class="text-slate-600 font-normal text-sm">— Analitika Dashboard</span></h3>
+              <p class="text-sm text-slate-500 mt-2">Real vaqt rejimida ma'lumotlarni 3D vizualizatsiya qiluvchi boshqaruv paneli.</p>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#4facfe] tracking-wide">React</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#4facfe] tracking-wide">Three.js</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#4facfe] tracking-wide">Tailwind</span>
+              </div>
+            </div>
+          </a>
+
+          <a href="#" class="project-card group relative rounded-2xl overflow-hidden glass-panel neon-border-hover" style="perspective:1000px">
+            <div class="tilt-card-project h-56 sm:h-64 relative overflow-hidden project-shot" style="background:linear-gradient(135deg,#0a0e1a,#1a0d2f 40%,#bd00ff22);">
+              <div class="absolute inset-0 opacity-40" style="background-image:linear-gradient(rgba(189,0,255,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(189,0,255,.25) 1px,transparent 1px);background-size:26px 26px;"></div>
+              <i data-lucide="component" class="absolute bottom-4 right-4 w-10 h-10 text-[#bd00ff]/70"></i>
+              <div class="absolute inset-0 flex items-end p-5 bg-linear-to-t from-[#030712] via-transparent to-transparent">
+                <span class="font-term text-[10px] tracking-widest text-[#bd00ff]/80">// PROJECT_02</span>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">QUANTUM.UI <span class="text-slate-600 font-normal text-sm">— Komponentlar kutubxonasi</span></h3>
+              <p class="text-sm text-slate-500 mt-2">Qayta ishlatiluvchi, kirish imkoniyati yaxshi UI komponentlar to'plami.</p>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#bd00ff] tracking-wide">Next.js</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#bd00ff] tracking-wide">TypeScript</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#bd00ff] tracking-wide">Storybook</span>
+              </div>
+            </div>
+          </a>
+
+          <a href="#" class="project-card group relative rounded-2xl overflow-hidden glass-panel neon-border-hover" style="perspective:1000px">
+            <div class="tilt-card-project h-56 sm:h-64 relative overflow-hidden project-shot" style="background:linear-gradient(135deg,#0a0e1a,#0d2f22 40%,#4facfe22);">
+              <div class="absolute inset-0 opacity-40" style="background-image:linear-gradient(rgba(79,172,254,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(79,172,254,.25) 1px,transparent 1px);background-size:26px 26px;"></div>
+              <i data-lucide="message-square-code" class="absolute bottom-4 right-4 w-10 h-10 text-[#4facfe]/70"></i>
+              <div class="absolute inset-0 flex items-end p-5 bg-linear-to-t from-[#030712] via-transparent to-transparent">
+                <span class="font-term text-[10px] tracking-widest text-[#4facfe]/80">// PROJECT_03</span>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">ECHO <span class="text-slate-600 font-normal text-sm">— Real-time chat</span></h3>
+              <p class="text-sm text-slate-500 mt-2">WebSocket asosidagi tezkor, animatsiyali muloqot interfeysi.</p>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#00f2fe] tracking-wide">React</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#00f2fe] tracking-wide">WebSocket</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-[#00f2fe] tracking-wide">Framer</span>
+              </div>
+            </div>
+          </a>
+
+          <a href="#" class="project-card group relative rounded-2xl overflow-hidden glass-panel neon-border-hover" style="perspective:1000px">
+            <div class="tilt-card-project h-56 sm:h-64 relative overflow-hidden project-shot" style="background:linear-gradient(135deg,#0a0e1a,#2f0d17 40%,#ff00c822);">
+              <div class="absolute inset-0 opacity-40" style="background-image:linear-gradient(rgba(255,0,200,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,200,.2) 1px,transparent 1px);background-size:26px 26px;"></div>
+              <i data-lucide="shopping-bag" class="absolute bottom-4 right-4 w-10 h-10 text-fuchsia-400/70"></i>
+              <div class="absolute inset-0 flex items-end p-5 bg-linear-to-t from-[#030712] via-transparent to-transparent">
+                <span class="font-term text-[10px] tracking-widest text-fuchsia-400/80">// PROJECT_04</span>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">PULSE <span class="text-slate-600 font-normal text-sm">— E-commerce tajriba</span></h3>
+              <p class="text-sm text-slate-500 mt-2">Mikro-animatsiyalarga boy, yuqori konversiyali onlayn-do'kon.</p>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-fuchsia-300 tracking-wide">Next.js</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-fuchsia-300 tracking-wide">Stripe</span>
+                <span class="px-2.5 py-1 rounded-full bg-white/5 text-[10px] font-term text-fuchsia-300 tracking-wide">GSAP</span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT — TERMINAL ============ -->
+    <section id="contact" class="relative py-28 sm:py-36 px-5 sm:px-8">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-10 reveal">
+          <span class="font-term text-xs tracking-[0.3em] text-[#00f2fe]">04 // TERMINAL_CONTACT</span>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-white mt-3">Aloqa terminali</h2>
+          <p class="text-slate-500 mt-3 text-sm sm:text-base">Yordam uchun <span class="text-[#4facfe] font-term">help</span> deb yozing.</p>
+        </div>
+
+        <div class="reveal rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_60px_-15px_rgba(0,242,254,.25)]" id="terminal-window">
+          <div class="flex items-center gap-2 px-4 py-3 bg-[#0d1424] border-b border-white/10">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f56]/80"></span>
+            <span class="w-3 h-3 rounded-full bg-[#ffbd2e]/80"></span>
+            <span class="w-3 h-3 rounded-full bg-[#27c93f]/80"></span>
+            <span class="ml-3 font-term text-[11px] text-slate-500">guest@olloberdi-dev: ~</span>
+          </div>
+          <div id="terminal-output" class="bg-[#05070f] font-term text-xs sm:text-sm px-4 sm:px-5 py-4 h-72 sm:h-80 overflow-y-auto space-y-1.5"></div>
+          <div class="flex items-center gap-2 bg-[#05070f] border-t border-white/10 px-4 sm:px-5 py-3">
+            <span class="font-term text-xs sm:text-sm text-[#00f2fe]" id="terminal-prompt">guest@olloberdi:~$</span>
+            <input id="terminal-input" type="text" autocomplete="off" spellcheck="false"
+              class="flex-1 bg-transparent outline-none font-term text-xs sm:text-sm text-white placeholder:text-slate-600"
+              placeholder="buyruq kiriting..." />
+          </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-4 mt-8 reveal">
+          <a href="https://github.com/" target="_blank" rel="noopener" class="flex items-center gap-2 text-slate-400 hover:text-[#00f2fe] transition-colors text-sm font-term"><i data-lucide="github" class="w-4 h-4"></i> GitHub</a>
+          <a href="https://t.me/" target="_blank" rel="noopener" class="flex items-center gap-2 text-slate-400 hover:text-[#00f2fe] transition-colors text-sm font-term"><i data-lucide="send" class="w-4 h-4"></i> Telegram</a>
+          <a href="https://linkedin.com/" target="_blank" rel="noopener" class="flex items-center gap-2 text-slate-400 hover:text-[#00f2fe] transition-colors text-sm font-term"><i data-lucide="linkedin" class="w-4 h-4"></i> LinkedIn</a>
+          <a href="mailto:olloberdi.dev@gmail.com" class="flex items-center gap-2 text-slate-400 hover:text-[#00f2fe] transition-colors text-sm font-term"><i data-lucide="mail" class="w-4 h-4"></i> Email</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="relative z-10 border-t border-white/5 py-10 px-5 sm:px-8">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="font-term text-xs text-slate-600">© <span id="year"></span> Ohunpolatov Olloberdi. Barcha huquqlar himoyalangan.</p>
+      <p class="font-term text-xs text-slate-600 flex items-center gap-2">
+        Built with code &amp; curiosity
+        <button id="easter-trigger" title="???" aria-label="hidden" class="w-2 h-2 rounded-full bg-[#bd00ff]/50 pulse-dot cursor-pointer border-0 outline-none"></button>
+      </p>
+    </div>
+  </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = window.matchMedia('(hover:none)').matches;
+
+  /* ============================================================
+     0. LUCIDE ICONS
+  ============================================================ */
+  try { if (window.lucide) lucide.createIcons(); } catch(e) { console.warn('lucide init failed', e); }
+
+  /* ============================================================
+     1. BOOT LOADER
+  ============================================================ */
+  (function boot(){
+    const screen = document.getElementById('boot-screen');
+    const log = document.getElementById('boot-log');
+    const bar = document.getElementById('boot-bar');
+    if (reducedMotion) { screen.classList.add('hide'); return; }
+
+    const lines = [
+      '> INITIALIZING SYSTEM...',
+      '> LOADING PROFILE: OHUNPOLATOV_OLLOBERDI.SYS',
+      '> BIRTH_YEAR: 2006 [DIGITAL NATIVE CONFIRMED]',
+      '> MOUNTING FRONTEND_CORE... OK',
+      '> CALIBRATING NEON INTERFACE...',
+      '> SYSTEM ONLINE.'
+    ];
+    let i = 0;
+    function typeLine(){
+      if (i >= lines.length){
+        setTimeout(() => screen.classList.add('hide'), 350);
+        return;
+      }
+      const p = document.createElement('div');
+      p.textContent = lines[i];
+      log.appendChild(p);
+      bar.style.width = Math.round(((i+1)/lines.length)*100) + '%';
+      i++;
+      setTimeout(typeLine, 260);
+    }
+    typeLine();
+  })();
+
+  /* ============================================================
+     2. PARTICLE / NEURAL BACKGROUND
+  ============================================================ */
+  (function particles(){
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, particlesArr = [];
+    const mouse = { x: null, y: null, radius: 140 };
+
+    const colors = ['#00f2fe', '#4facfe', '#bd00ff'];
+
+    function resize(){
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', () => { mouse.x = null; mouse.y = null; });
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+    }, { passive: true });
+
+    function Particle(){
+      this.x = Math.random() * w;
+      this.y = Math.random() * h;
+      this.vx = (Math.random() - 0.5) * 0.35;
+      this.vy = (Math.random() - 0.5) * 0.35;
+      this.r = Math.random() * 1.6 + 0.8;
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+    Particle.prototype.update = function(){
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.x < 0 || this.x > w) this.vx *= -1;
+      if (this.y < 0 || this.y > h) this.vy *= -1;
+
+      if (mouse.x !== null){
+        const dx = this.x - mouse.x, dy = this.y - mouse.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < mouse.radius){
+          const force = (mouse.radius - dist) / mouse.radius;
+          this.x += (dx / (dist || 1)) * force * 1.8;
+          this.y += (dy / (dist || 1)) * force * 1.8;
+        }
+      }
+    };
+    Particle.prototype.draw = function(){
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = this.color;
+      ctx.fill();
+    };
+
+    function init(){
+      particlesArr = [];
+      const density = isTouch ? 22000 : 15000;
+      let count = Math.floor((w * h) / density);
+      count = Math.min(count, isTouch ? 55 : 110);
+      for (let i = 0; i < count; i++) particlesArr.push(new Particle());
+    }
+    init();
+    window.addEventListener('resize', init);
+
+    function connect(){
+      const maxDist = 130;
+      for (let a = 0; a < particlesArr.length; a++){
+        for (let b = a + 1; b < particlesArr.length; b++){
+          const dx = particlesArr[a].x - particlesArr[b].x;
+          const dy = particlesArr[a].y - particlesArr[b].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < maxDist){
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(79,172,254,${(1 - dist / maxDist) * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(particlesArr[a].x, particlesArr[a].y);
+            ctx.lineTo(particlesArr[b].x, particlesArr[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate(){
+      ctx.clearRect(0, 0, w, h);
+      particlesArr.forEach(p => { p.update(); p.draw(); });
+      connect();
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  /* ============================================================
+     3. CUSTOM CURSOR
+  ============================================================ */
+  if (!isTouch){
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let rx = 0, ry = 0, mx = 0, my = 0;
+    window.addEventListener('mousemove', (e) => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%,-50%)`;
+    });
+    (function loop(){
+      rx += (mx - rx) * 0.15;
+      ry += (my - ry) * 0.15;
+      ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%,-50%)`;
+      requestAnimationFrame(loop);
+    })();
+    document.querySelectorAll('a, button, input, .tilt-card, .project-card').forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('active'));
+      el.addEventListener('mouseleave', () => ring.classList.remove('active'));
+    });
+  }
+
+  /* ============================================================
+     4. NAVBAR: scroll shrink + mobile menu
+  ============================================================ */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 40) navbar.classList.add('bg-[#030712]/80','backdrop-blur-md','border-b','border-white/5');
+    else navbar.classList.remove('bg-[#030712]/80','backdrop-blur-md','border-b','border-white/5');
+  });
+
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  menuBtn.addEventListener('click', () => {
+    const open = !mobileMenu.classList.contains('hidden');
+    if (open){ mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex'); }
+    else { mobileMenu.classList.remove('hidden'); mobileMenu.classList.add('flex'); }
+  });
+  document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', () => {
+    mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex');
+  }));
+
+  /* ============================================================
+     5. SCROLL REVEAL
+  ============================================================ */
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+
+  /* Animated counters in About */
+  const counters = document.querySelectorAll('[data-counter]');
+  const counterIO = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.getAttribute('data-counter'), 10);
+      const duration = 1200;
+      const start = performance.now();
+      function step(now){
+        const progress = Math.min((now - start) / duration, 1);
+        el.textContent = Math.floor(progress * target);
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(step);
+      counterIO.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(el => counterIO.observe(el));
+
+  /* Dynamic age */
+  const ageEl = document.getElementById('dyn-age');
+  if (ageEl) ageEl.textContent = new Date().getFullYear() - 2006;
+
+  /* ============================================================
+     6. TYPEWRITER (matrix-style scramble reveal)
+  ============================================================ */
+  (function typewriter(){
+    const el = document.getElementById('typewriter');
+    const phrases = [
+      "Frontend Developer // Kelajakni kod bilan quraman.",
+      "Interfeys — bu san'at, kod — bu chizg'ich.",
+     "Har bir piksel — bir maqsad uchun."
+    ];
+    const chars = "!<>-_\\/[]{}—=+*^?#01";
+    let phraseIndex = 0;
+
+    function scrambleTo(text, cb){
+      let iteration = 0;
+      const maxIter = text.length * 3;
+      const interval = setInterval(() => {
+        el.textContent = text.split('').map((ch, idx) => {
+          if (idx < iteration / 3) return text[idx];
+          if (ch === ' ') return ' ';
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join('');
+        iteration++;
+        if (iteration > maxIter){
+          clearInterval(interval);
+          el.textContent = text;
+          cb && cb();
+        }
+      }, 28);
+    }
+
+    function cycle(){
+      scrambleTo(phrases[phraseIndex], () => {
+        setTimeout(() => {
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          cycle();
+        }, 2200);
+      });
+    }
+    cycle();
+  })();
+
+  /* ============================================================
+     7. LIQUID TEXT DISTORTION (hero name hover)
+  ============================================================ */
+  (function liquid(){
+    if (isTouch || reducedMotion) return;
+    const heroName = document.getElementById('hero-name');
+    const turb = document.getElementById('liquid-turb');
+    const disp = document.getElementById('liquid-disp');
+    let t = 0, raf = null;
+
+    function set(val){
+      const freq = (0.012 * val).toFixed(4);
+      turb.setAttribute('baseFrequency', freq + ' ' + freq);
+      disp.setAttribute('scale', (46 * val).toFixed(1));
+    }
+    function animate(target){
+      cancelAnimationFrame(raf);
+      function step(){
+        t += (target - t) * 0.12;
+        set(t);
+        if (Math.abs(target - t) > 0.01) raf = requestAnimationFrame(step);
+        else set(target);
+      }
+      step();
+    }
+    heroName.addEventListener('mouseenter', () => animate(1));
+    heroName.addEventListener('mouseleave', () => animate(0));
+  })();
+
+  /* ============================================================
+     8. 3D TILT EFFECT (skills + projects)
+  ============================================================ */
+  function applyTilt(el, maxTilt){
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const rx = (0.5 - py) * maxTilt;
+      const ry = (px - 0.5) * maxTilt;
+      el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02,1.02,1.02)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale3d(1,1,1)';
+    });
+  }
+  if (!isTouch){
+    document.querySelectorAll('.tilt-card').forEach(el => applyTilt(el, 12));
+    document.querySelectorAll('.project-card').forEach(el => applyTilt(el, 6));
+  }
+
+  /* ============================================================
+     9. TERMINAL CONTACT
+  ============================================================ */
+  (function terminal(){
+    const output = document.getElementById('terminal-output');
+    const input = document.getElementById('terminal-input');
+    const CONTACT_EMAIL = 'olloberdi.dev@gmail.com'; // <-- shu yerga o'z emailingizni yozing
+
+    let state = 'idle';
+    const draft = {};
+
+    function printLine(text, cls){
+      const p = document.createElement('div');
+      p.className = cls || 'text-slate-400';
+      p.textContent = text;
+      output.appendChild(p);
+      output.scrollTop = output.scrollHeight;
+    }
+    function printPrompt(cmd){
+      printLine('guest@olloberdi:~$ ' + cmd, 'text-white');
+    }
+
+    printLine("Xush kelibsiz. Bu — Ohunpolatov Olloberdi bilan bog'lanish terminali.", 'text-[#4facfe]');
+    printLine("Buyruqlar ro'yxati uchun 'help' deb yozing.", 'text-slate-500');
+
+    const HELP = [
+      'MAVJUD BUYRUQLAR:',
+      '  help              — buyruqlar ro\'yxati',
+      '  whoami            — men haqimda qisqacha',
+      '  social --list     — ijtimoiy tarmoqlar',
+      '  contact --send    — xabar yuborish oqimini boshlash',
+      '  clear             — terminalni tozalash'
+    ];
+
+    function handleCommand(raw){
+      const cmd = raw.trim();
+      if (cmd === '') return;
+      printPrompt(cmd);
+
+      if (state !== 'idle'){
+        handleFlow(cmd);
+        return;
+      }
+
+      const lower = cmd.toLowerCase();
+      if (lower === 'help'){
+        HELP.forEach(l => printLine(l));
+      } else if (lower === 'whoami'){
+        printLine("Ohunpolatov Olloberdi — 2006-yil tug'ilgan, Frontend Developer.", 'text-[#00f2fe]');
+        printLine("Interfeyslarni g'oyadan tajribaga aylantiraman.");
+      } else if (lower === 'social' || lower === 'social --list'){
+        printLine('GitHub    → github.com/', 'text-[#4facfe]');
+        printLine('Telegram  → t.me/', 'text-[#4facfe]');
+        printLine('LinkedIn  → linkedin.com/', 'text-[#4facfe]');
+      } else if (lower === 'clear'){
+        output.innerHTML = '';
+      } else if (lower === 'contact' || lower === 'contact --send'){
+        state = 'name';
+        printLine('Xabar yuborish oqimi boshlandi. Chiqish uchun "cancel" deb yozing.', 'text-slate-500');
+        printLine('Ismingizni kiriting:', 'text-[#bd00ff]');
+      } else if (lower === 'matrix'){
+        activateMatrix();
+      } else if (lower === 'sudo' || lower.startsWith('sudo ')){
+        printLine('Ruxsat rad etildi: bu yerda faqat "help" kuchga ega. 😄', 'text-rose-400');
+      } else {
+        printLine(`Buyruq topilmadi: "${cmd}". Yordam uchun 'help' yozing.`, 'text-rose-400');
+      }
+    }
+
+    function handleFlow(cmd){
+      if (cmd.toLowerCase() === 'cancel'){
+        state = 'idle';
+        printLine('Bekor qilindi.', 'text-slate-500');
+        return;
+      }
+      if (state === 'name'){
+        draft.name = cmd;
+        state = 'email';
+        printLine('Email manzilingizni kiriting:', 'text-[#bd00ff]');
+      } else if (state === 'email'){
+        if (!cmd.includes('@') || !cmd.includes('.')){
+          printLine("Email noto'g'ri ko'rinmoqda. Qaytadan kiriting:", 'text-rose-400');
+          return;
+        }
+        draft.email = cmd;
+        state = 'message';
+        printLine('Xabaringizni kiriting:', 'text-[#bd00ff]');
+      } else if (state === 'message'){
+        draft.message = cmd;
+        state = 'idle';
+        const subject = encodeURIComponent('Portfolio orqali xabar — ' + draft.name);
+        const body = encodeURIComponent(draft.message + '\n\n— ' + draft.name + ' (' + draft.email + ')');
+        const mailto = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+        printLine('---------------------------------------------', 'text-slate-600');
+        printLine('✓ XABAR TAYYORLANDI. Email mijozi ochilmoqda...', 'text-[#00f2fe]');
+        printLine(`  Kimdan: ${draft.name} <${draft.email}>`, 'text-slate-500');
+        printLine('---------------------------------------------', 'text-slate-600');
+        window.open(mailto, '_blank');
+      }
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){
+        const val = input.value;
+        input.value = '';
+        handleCommand(val);
+      }
+    });
+
+    document.getElementById('terminal-window').addEventListener('click', () => input.focus());
+  })();
+
+  /* ============================================================
+     10. MATRIX EASTER EGG
+  ============================================================ */
+  const matrixCanvas = document.getElementById('matrix-overlay');
+  const mctx = matrixCanvas.getContext('2d');
+  let matrixActive = false, matrixCols = [], matrixRAF = null;
+
+  function setupMatrix(){
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+    const fontSize = 16;
+    const columns = Math.floor(matrixCanvas.width / fontSize);
+    matrixCols = new Array(columns).fill(0);
+  }
+  window.addEventListener('resize', () => { if (matrixActive) setupMatrix(); });
+
+  function drawMatrix(){
+    const fontSize = 16;
+    mctx.fillStyle = 'rgba(0,0,0,0.08)';
+    mctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    const glyphs = 'アイウエオカキクケコサシスセソ01234567890OLLOBERDI';
+    mctx.font = fontSize + 'px JetBrains Mono, monospace';
+    for (let i = 0; i < matrixCols.length; i++){
+      const text = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const grad = Math.random();
+      mctx.fillStyle = grad < 0.1 ? '#bd00ff' : (grad < 0.4 ? '#4facfe' : '#00f2fe');
+      mctx.fillText(text, i * fontSize, matrixCols[i] * fontSize);
+      if (matrixCols[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) matrixCols[i] = 0;
+      matrixCols[i]++;
+    }
+    matrixRAF = requestAnimationFrame(drawMatrix);
+  }
+
+  function activateMatrix(){
+    if (matrixActive) return;
+    matrixActive = true;
+    setupMatrix();
+    matrixCanvas.classList.add('show');
+    drawMatrix();
+  }
+  function deactivateMatrix(){
+    matrixActive = false;
+    matrixCanvas.classList.remove('show');
+    cancelAnimationFrame(matrixRAF);
+    mctx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+  }
+  window.activateMatrix = activateMatrix;
+
+  document.addEventListener('keydown', (e) => {
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'm' || e.key === 'M'){
+      matrixActive ? deactivateMatrix() : activateMatrix();
+    }
+    if (e.key === 'Escape' && matrixActive) deactivateMatrix();
+  });
+  matrixCanvas.addEventListener('click', deactivateMatrix);
+  document.getElementById('easter-trigger').addEventListener('click', activateMatrix);
+
+  /* ============================================================
+     11. FOOTER YEAR
+  ============================================================ */
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+});
+</script>
+</body>
+</html>
